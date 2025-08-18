@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ICAO Brasil">
+    <title>ICAO Brasil - Localidades Aeroportuárias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .filters-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .filter-select {
+            padding: 12px;
+            font-size: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            color: #333;
+            outline: none;
+        }
+
+        .update-button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #059669, #10b981);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(5, 150, 105, 0.3);
+        }
+
+        .update-button:hover {
+            background: linear-gradient(45deg, #047857, #059669);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+        }
+
+        .update-button:active {
+            transform: translateY(0);
+        }
+
+        .update-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #86efac;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-loading {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .results-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .icao-code {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .locality-name {
+            font-size: 16px;
+            color: #475569;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .info-item {
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #1e293b;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .uf-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .price {
+            color: #059669;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .observacoes {
+            font-size: 12px;
+            color: #f59e0b;
+            font-weight: 500;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fef3c7;
+            border-radius: 8px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .stats {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 480px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .update-button {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body onload="atualizarPrecos()">
+    <div class="container">
+        <div class="header">
+            <h1>COMBLUB - CELOG</h1>
+            <p>✈️ Localidades Contratadas - Brasil</p>
+        </div>
+
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput"
+                placeholder="Digite código ICAO, cidade ou UF..."
+                onkeyup="filtrarDados()"
+            >
+        </div>
+
+        <div class="filters-container">
+            <div class="filters">
+                <select id="regionFilter" class="filter-select" onchange="filtrarDados()">
+                    <option value="">Todas as Regiões</option>
+                    <option value="CENTRO-OESTE">Centro-Oeste</option>
+                    <option value="NORTE">Norte</option>
+                    <option value="NORDESTE">Nordeste</option>
+                    <option value="SUL">Sul</option>
+                    <option value="SUDESTE">Sudeste</option>
+                </select>
+                
+                <select id="fuelFilter" class="filter-select" onchange="filtrarDados()">
+                    <option value="">Todos os Combustíveis</option>
+                    <option value="JET A">JET A</option>
+                    <option value="JET A1">JET A1</option>
+                    <option value="JET PLUS">JET PLUS</option>
+                    <option value="AVGAS">AVGAS</option>
+                </select>
+            </div>
+            
+            <button id="updateBtn" class="update-button" onclick="atualizarPrecos()">
+                📊 Clique  para Atualizar Preços
+            </button>
+        </div>
+
+        <div class="results-container" id="resultsContainer">
+            <div class="stats">Carregando localidades...</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da planilha Google Sheets
+        var CONFIG_PLANILHA = {
+            // Planilha oficial da FAB atualizada mensalmente
+            url: 'https://docs.google.com/spreadsheets/d/1qF75o4R4FuM0_uBo5lxcsLK1aJAmMhCPNRiIru3wobQ/export?format=csv&gid=0',
+            ultimaAtualizacao: localStorage.getItem('ultimaAtualizacao') || 'Nunca atualizado'
+        };
+
+        function mostrarStatus(mensagem, tipo) {
+            var statusDiv = document.getElementById('statusMessage');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'statusMessage';
+                document.querySelector('.filters-container').appendChild(statusDiv);
+            }
+            
+            statusDiv.className = 'status-message status-' + tipo;
+            statusDiv.textContent = mensagem;
+            
+            if (tipo !== 'loading') {
+                setTimeout(function() {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        async function atualizarPrecos() {
+            var botao = document.getElementById('updateBtn');
+            botao.disabled = true;
+            botao.textContent = '⏳ Atualizando...';
+            
+            mostrarStatus('Buscando preços atualizados...', 'loading');
+            
+            try {
+                // Acessar planilha oficial da FAB
+                var urlPlanilha = CONFIG_PLANILHA.url;
+                
+                var response = await fetch(urlPlanilha);
+                if (!response.ok) {
+                    throw new Error('Erro ao acessar planilha: ' + response.status);
+                }
+                
+                var csvText = await response.text();
+                var novosDados = processarCSV(csvText);
+                
+                if (novosDados.length > 0) {
+                    // Atualizar apenas os preços, mantendo a estrutura existente
+                    var atualizados = atualizarApenasPrecos(novosDados);
+                    
+                    var agora = new Date().toLocaleString('pt-BR');
+                    CONFIG_PLANILHA.ultimaAtualizacao = agora;
+                    localStorage.setItem('ultimaAtualizacao', agora);
+                    
+                    mostrarStatus('✅ ' + atualizados + ' contratos atualizados com sucesso!', 'success');
+                    filtrarDados(); // Re-renderizar com novos preços
+                } else {
+                    mostrarStatus('⚠️ Nenhum dado válido encontrado na planilha', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao atualizar:', error);
+                mostrarStatus('❌ Erro ao atualizar. Usando preços offline.', 'error');
+            }
+            
+            botao.disabled = false;
+            botao.textContent = '📊 Atualizar Preços';
+        }
+
+        function processarCSV(csvText) {
+            var linhas = csvText.split('\n');
+            var dados = [];
+            
+            // Processar cada linha do CSV (pular cabeçalho)
+            for (var i = 1; i < linhas.length; i++) {
+                var linha = linhas[i].trim();
+                if (!linha) continue;
+                
+                // Dividir por vírgulas, mas tratar aspas corretamente
+                var colunas = [];
+                var dentroAspas = false;
+                var colunaAtual = '';
+                
+                for (var j = 0; j < linha.length; j++) {
+                    var char = linha[j];
+                    if (char === '"') {
+                        dentroAspas = !dentroAspas;
+                    } else if (char === ',' && !dentroAspas) {
+                        colunas.push(colunaAtual.trim().replace(/"/g, ''));
+                        colunaAtual = '';
+                    } else {
+                        colunaAtual += char;
+                    }
+                }
+                // Adicionar última coluna
+                if (colunaAtual) {
+                    colunas.push(colunaAtual.trim().replace(/"/g, ''));
+                }
+                
+                if (colunas.length >= 12 && colunas[1] && colunas[5]) {
+                    // Preço pode estar em colunas 10 e 11 devido à separação pela vírgula
+                    var precoBruto = colunas[10];
+                    
+                    // Verifica se há separação incorreta da vírgula decimal
+                    if (colunas[11] && /^\d+$/.test(colunas[11])) {
+                        precoBruto += ',' + colunas[11]; // junta "5" + "," + "2368"
+                    }
+                    
+                    // Estrutura: CHAVE(0), ICAO(1), LOCALIDADE(2), UF(3), REGIÃO(4), 
+                    //           COMBUSTÍVEL(5), OBS(6), CONTRATO(7), VIGÊNCIA(8), 
+                    //           EMPRESA(9), PREÇO(10,11), STATUS(12)
+                    dados.push({
+                        icao: colunas[1],
+                        combustivel: colunas[5],
+                        preco: precoBruto,
+                        vigencia: colunas[8] || '',
+                        chave: colunas[1] + '_' + colunas[5] // Para identificação única
+                    });
+                }
+            }
+            
+            console.log('Dados processados da planilha:', dados.length + ' itens');
+            return dados;
+        }
+
+        function atualizarApenasPrecos(novosDados) {
+            // Criar mapa de preços e vigência por ICAO + Combustível
+            var mapDados = {};
+            novosDados.forEach(function(item) {
+                var chave = item.icao + '_' + item.combustivel;
+                // Usar o preço exatamente como veio da planilha (já com vírgula)
+                mapDados[chave] = {
+                    preco: item.preco,
+                    vigencia: item.vigencia
+                };
+            });
+            
+            // Atualizar preços e vigência nas localidades existentes
+            var atualizados = 0;
+            localidadesData.forEach(function(localidade) {
+                var chave = localidade.icao + '_' + localidade.combustivel;
+                if (mapDados[chave]) {
+                    var dadosAntigos = localidade.preco + '|' + localidade.vigencia;
+                    localidade.preco = mapDados[chave].preco;
+                    if (mapDados[chave].vigencia) {
+                        localidade.vigencia = mapDados[chave].vigencia;
+                    }
+                    var dadosNovos = localidade.preco + '|' + localidade.vigencia;
+                    if (dadosAntigos !== dadosNovos) {
+                        atualizados++;
+                    }
+                }
+            });
+            
+            console.log('Dados atualizados: ' + atualizados + ' de ' + localidadesData.length + ' localidades');
+            return atualizados;
+        }
+
+        // Base de dados das localidades (será atualizada via Google Sheets)
+        var localidadesData = [
+            // CENTRO-OESTE
+            {icao:"SBAN", nome:"BASE AÉREA DE ANÁPOLIS", uf:"GO", regiao:"CENTRO-OESTE", combustivel:"JET A1", preco:"4,9960", empresa:"VIBRA ENERGIA S.A", vigencia:"31/10/2029", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBAT", nome:"ALTA FLORESTA", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,3581", empresa:"VIBRA ENERGIA S.A", vigencia:"31/10/2029", obs:""},
+            {icao:"SBBR", nome:"BASE AÉREA DE BRASÍLIA", uf:"DF", regiao:"CENTRO-OESTE", combustivel:"JET A1", preco:"5,0708", empresa:"RAIZEN S.A.", vigencia:"31/10/2029", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBBR", nome:"BASE AÉREA DE BRASÍLIA", uf:"DF", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"4,9876", empresa:"AIR BP BRASIL LTDA", vigencia:"22/04/2030", obs:"EXCLUSIVAMENTE PARA ABASTECER O KC-390 MILLENNIUM"},
+            {icao:"SBBR", nome:"BASE AÉREA DE BRASÍLIA", uf:"DF", regiao:"CENTRO-OESTE", combustivel:"AVGAS", preco:"9,5484", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", vigencia:"31/10/2029", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBBW", nome:"BARRA DO GARÇAS", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,1634", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBCG", nome:"BASE AÉREA DE CAMPO GRANDE", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"AVGAS", preco:"9,3084", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCG", nome:"BASE AÉREA DE CAMPO GRANDE", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A1", preco:"5,0573", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBCN", nome:"CALDAS NOVAS", uf:"GO", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"9,1539", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCR", nome:"CORUMBÁ", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,1790", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCY", nome:"VÁRZEA GRANDE", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"5,3940", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBDB", nome:"BONITO", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,9834", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBDO", nome:"DOURADOS", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,4234", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBGO", nome:"GOIÂNIA", uf:"GO", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"4,9565", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPP", nome:"PONTA PORÃ", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"12,3034", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSI", nome:"SINOP", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"7,8600", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBTG", nome:"TRÊS LAGOAS", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,9790", empresa:"VIBRA ENERGIA S.A", obs:""},
+
+            // NORTE
+            {icao:"SBBE", nome:"BASE AÉREA DE BELÉM", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"4,9285", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBBE", nome:"BASE AÉREA DE BELÉM", uf:"PA", regiao:"NORTE", combustivel:"JET PLUS", preco:"4,9285", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBBV", nome:"BASE AÉREA DE BOA VISTA", uf:"RR", regiao:"NORTE", combustivel:"JET A", preco:"5,3894", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBCC", nome:"CACHIMBO", uf:"PA", regiao:"NORTE", combustivel:"AVGAS", preco:"10,4984", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCC", nome:"CACHIMBO", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"6,3485", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:""},
+            {icao:"SBCJ", nome:"CARAJÁS", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"10,2667", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCZ", nome:"CRUZEIRO DO SUL", uf:"AC", regiao:"NORTE", combustivel:"JET A", preco:"10,6842", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBEG", nome:"MANAUS", uf:"AM", regiao:"NORTE", combustivel:"JET A", preco:"5,5282", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBEG", nome:"MANAUS", uf:"AM", regiao:"NORTE", combustivel:"JET PLUS", preco:"5,5096", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBHT", nome:"ALTAMIRA", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"10,6367", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBIH", nome:"ITAITUBA", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"10,9542", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBJI", nome:"JI PARANÁ", uf:"RO", regiao:"NORTE", combustivel:"JET A", preco:"10,5914", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBMA", nome:"MARABÁ", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"5,1019", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBMN", nome:"BASE AÉREA DE MANAUS", uf:"AM", regiao:"NORTE", combustivel:"JET A1", preco:"9,6689", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBMQ", nome:"MACAPÁ", uf:"AP", regiao:"NORTE", combustivel:"JET A", preco:"5,1930", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPJ", nome:"PALMAS", uf:"TO", regiao:"NORTE", combustivel:"JET A", preco:"5,2041", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPV", nome:"BASE AÉREA DE PORTO VELHO", uf:"RO", regiao:"NORTE", combustivel:"JET A1", preco:"7,2994", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBRB", nome:"RIO BRANCO", uf:"AC", regiao:"NORTE", combustivel:"JET A", preco:"5,8688", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSN", nome:"SANTARÉM", uf:"PA", regiao:"NORTE", combustivel:"JET A", preco:"5,8101", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBTF", nome:"TEFÉ", uf:"AM", regiao:"NORTE", combustivel:"JET A", preco:"10,8716", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBTT", nome:"TABATINGA", uf:"AM", regiao:"NORTE", combustivel:"JET A", preco:"11,0316", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBUA", nome:"SÃO GABRIEL DA CACHOEIRA", uf:"AM", regiao:"NORTE", combustivel:"JET A", preco:"10,0581", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBUY", nome:"COARÍ - PORTO URUCU", uf:"AM", regiao:"NORTE", combustivel:"JET A", preco:"11,7716", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBVH", nome:"VILHENA", uf:"RO", regiao:"NORTE", combustivel:"JET A", preco:"10,5215", empresa:"VIBRA ENERGIA S.A", obs:""},
+
+            // NORDESTE
+            {icao:"SBAR", nome:"ARACAJU", uf:"SE", regiao:"NORDESTE", combustivel:"JET A", preco:"9,0804", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBFZ", nome:"BASE AÉREA DE FORTALEZA", uf:"CE", regiao:"NORDESTE", combustivel:"JET A", preco:"4,8546", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBIZ", nome:"IMPERATRIZ", uf:"MA", regiao:"NORDESTE", combustivel:"JET A", preco:"8,3740", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBJP", nome:"JOÃO PESSOA", uf:"PB", regiao:"NORDESTE", combustivel:"JET A", preco:"10,0066", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBJU", nome:"JUAZEIRO", uf:"CE", regiao:"NORDESTE", combustivel:"JET A", preco:"10,2138", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBKG", nome:"CAMPINA GRANDE", uf:"PB", regiao:"NORDESTE", combustivel:"JET A", preco:"8,3800", empresa:"AIR BP PETROBAHIA LTDA", obs:""},
+            {icao:"SBMO", nome:"MACEIÓ", uf:"AL", regiao:"NORDESTE", combustivel:"JET A", preco:"4,9800", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBNT", nome:"BASE AÉREA DE NATAL", uf:"RN", regiao:"NORDESTE", combustivel:"JET A1", preco:"4,9391", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBPL", nome:"PETROLINA", uf:"PE", regiao:"NORDESTE", combustivel:"JET A", preco:"9,8635", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPS", nome:"PORTO SEGURO", uf:"BA", regiao:"NORDESTE", combustivel:"JET A", preco:"5,3318", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBRF", nome:"BASE AÉREA DE RECIFE", uf:"PE", regiao:"NORDESTE", combustivel:"JET A", preco:"4,5868", empresa:"AIR BP BRASIL LTDA", obs:""},
+            {icao:"SBRF", nome:"BASE AÉREA DE RECIFE", uf:"PE", regiao:"NORDESTE", combustivel:"JET PLUS", preco:"5,0268", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBSG", nome:"SÃO GONÇALO DO AMARANTE", uf:"RN", regiao:"NORDESTE", combustivel:"JET A", preco:"4,9625", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSL", nome:"SÃO LUIS", uf:"MA", regiao:"NORDESTE", combustivel:"JET A", preco:"5,0623", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSV", nome:"BASE AÉREA DE SALVADOR", uf:"BA", regiao:"NORDESTE", combustivel:"JET A1", preco:"5,5833", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBTC", nome:"COMANDATUBA", uf:"BA", regiao:"NORDESTE", combustivel:"JET A", preco:"9,3379", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBTE", nome:"TERESINA", uf:"PI", regiao:"NORDESTE", combustivel:"JET A", preco:"10,2837", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBVC", nome:"VITÓRIA DA CONQUISTA", uf:"BA", regiao:"NORDESTE", combustivel:"JET A", preco:"9,3561", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SDIY", nome:"FEIRA DE SANTANA", uf:"BA", regiao:"NORDESTE", combustivel:"JET A", preco:"8,0861", empresa:"AIR BP PETROBAHIA LTDA", obs:""},
+            {icao:"SWNB", nome:"LUIZ EDUARDO MAGALHÃES", uf:"BA", regiao:"NORDESTE", combustivel:"JET A", preco:"9,2470", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+
+            // SUL
+            {icao:"SBBI", nome:"BACACHERI", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"4,9057", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCA", nome:"CASCAVEL", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"9,1576", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBCH", nome:"CHAPECÓ", uf:"SC", regiao:"SUL", combustivel:"JET A", preco:"5,4040", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBCO", nome:"BASE AÉREA DE CANOAS", uf:"RS", regiao:"SUL", combustivel:"JET A1", preco:"4,7819", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBCT", nome:"AFONSO PENA", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"4,7291", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBCX", nome:"CAXIAS DO SUL", uf:"RS", regiao:"SUL", combustivel:"JET A", preco:"10,1320", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBFI", nome:"FOZ DO IGUAÇU", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"5,2489", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBFL", nome:"BASE AÉREA DE FLORIANÓPOLIS", uf:"SC", regiao:"SUL", combustivel:"AVGAS", preco:"9,2584", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBFL", nome:"BASE AÉREA DE FLORIANÓPOLIS", uf:"SC", regiao:"SUL", combustivel:"JET A", preco:"4,5022", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBFL", nome:"BASE AÉREA DE FLORIANÓPOLIS", uf:"SC", regiao:"SUL", combustivel:"JET PLUS", preco:"4,5740", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBJA", nome:"JAGUARUNA", uf:"SC", regiao:"SUL", combustivel:"JET A", preco:"8,6240", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBJV", nome:"JOINVILLE", uf:"SC", regiao:"SUL", combustivel:"JET A", preco:"8,4040", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBLO", nome:"LONDRINA", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"5,2195", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBMG", nome:"MARINGÁ", uf:"PR", regiao:"SUL", combustivel:"JET A", preco:"5,2152", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBNF", nome:"NAVEGANTES", uf:"SC", regiao:"SUL", combustivel:"JET A", preco:"5,0139", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPA", nome:"PORTO ALEGRE", uf:"RS", regiao:"SUL", combustivel:"JET PLUS", preco:"5,0540", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBPA", nome:"PORTO ALEGRE", uf:"RS", regiao:"SUL", combustivel:"JET A", preco:"4,8578", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBPF", nome:"PASSO FUNDO", uf:"RS", regiao:"SUL", combustivel:"JET A", preco:"8,7740", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBPK", nome:"PELOTAS", uf:"RS", regiao:"SUL", combustivel:"JET A", preco:"10,3965", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSM", nome:"BASE AÉREA DE SANTA MARIA", uf:"RS", regiao:"SUL", combustivel:"AVGAS", preco:"9,7284", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSM", nome:"BASE AÉREA DE SANTA MARIA", uf:"RS", regiao:"SUL", combustivel:"JET A1", preco:"4,9813", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBUG", nome:"URUGUAIANA", uf:"RS", regiao:"SUL", combustivel:"JET A", preco:"10,0960", empresa:"VIBRA ENERGIA S.A", obs:""},
+
+            // SUDESTE
+            {icao:"SBAE", nome:"BAURU", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"9,4023", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBAF", nome:"BASE AÉREA DOS AFONSOS", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A", preco:"5,0446", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:""},
+            {icao:"SBAF", nome:"BASE AÉREA DOS AFONSOS", uf:"RJ", regiao:"SUDESTE", combustivel:"AVGAS", preco:"9,6784", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SBAQ", nome:"ARARAQUARA", uf:"SP", regiao:"SUDESTE", combustivel:"AVGAS", preco:"16,4688", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SBAU", nome:"ARAÇATUBA", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"5,2144", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBAX", nome:"ARAXÁ", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SBBH", nome:"PAMPULHA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"4,9961", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBBQ", nome:"EPCAR - BARBACENA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"5,3644", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBBQ", nome:"EPCAR - BARBACENA", uf:"MG", regiao:"SUDESTE", combustivel:"AVGAS", preco:"9,5084", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"TEMPORARIAMENTE SUSPENSO"},
+            {icao:"SBCB", nome:"CABO FRIO", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A", preco:"7,5947", empresa:"RDC REVENDEDORA DE COMBUSTIVEIS", obs:""},
+            {icao:"SBCF", nome:"CONFINS", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"4,7538", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBDN", nome:"PRESIDENTE PRUDENTE", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,8937", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBES", nome:"SÃO PEDRO D'ALDEIA", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A", preco:"4,2446", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBGL", nome:"BASE AÉREA DO GALEÃO", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A1", preco:"4,1398", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBGP", nome:"GAVIÃO PEIXOTO", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"9,1744", empresa:"RAIZEN S.A.", obs:""},
+            {icao:"SBGR", nome:"BASE AÉREA DE SÃO PAULO", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,1633", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBGR", nome:"BASE AÉREA DE SÃO PAULO", uf:"SP", regiao:"SUDESTE", combustivel:"JET PLUS", preco:"4,4644", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBGW", nome:"GUARATINGUETÁ", uf:"SP", regiao:"SUDESTE", combustivel:"AVGAS", preco:"9,3384", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:""},
+            {icao:"SBGW", nome:"GUARATINGUETÁ", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,9644", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBIP", nome:"IPATINGA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"8,1644", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBJD", nome:"JUNDIAÍ", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"7,3645", empresa:"PAULISTA REVENDEDORA DE COMBUSTÍVEIS LTDA", obs:""},
+            {icao:"SBKP", nome:"VIRACOPOS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,2748", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBLS", nome:"LAGOA SANTA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"4,9122", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBLS", nome:"LAGOA SANTA", uf:"MG", regiao:"SUDESTE", combustivel:"AVGAS", preco:"9,4584", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBME", nome:"MACAÉ", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A", preco:"4,6546", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBML", nome:"MARÍLIA", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"10,0973", empresa:"ATINAIUR ANTONIO PIRES SAPPER", obs:""},
+            {icao:"SBMT", nome:"CAMPO DE MARTE", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,5762", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBMT", nome:"CAMPO DE MARTE", uf:"SP", regiao:"SUDESTE", combustivel:"AVGAS", preco:"10,8984", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBRJ", nome:"SANTOS DUMONT", uf:"RJ", regiao:"SUDESTE", combustivel:"JET PLUS", preco:"4,4753", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBRJ", nome:"SANTOS DUMONT", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A", preco:"4,2461", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBRP", nome:"RIBEIRÃO PRETO", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,7135", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSC", nome:"BASE AÉREA DE SANTA CRUZ", uf:"RJ", regiao:"SUDESTE", combustivel:"JET A1", preco:"4,4179", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
+            {icao:"SBSC", nome:"BASE AÉREA DE SANTA CRUZ", uf:"RJ", regiao:"SUDESTE", combustivel:"AVGAS", preco:"9,4784", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBSJ", nome:"SÃO JOSÉ DOS CAMPOS", uf:"SP", regiao:"SUDESTE", combustivel:"AVGAS", preco:"11,2884", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:"Necessário realizar agendamento prévio de 48 horas, através do contato: Marcelo Carnaval (14) 99776-4715"},
+            {icao:"SBSJ", nome:"SÃO JOSÉ DOS CAMPOS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,2232", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSJ", nome:"SÃO JOSÉ DOS CAMPOS", uf:"SP", regiao:"SUDESTE", combustivel:"JET PLUS", preco:"4,7744", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSP", nome:"CONGONHAS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,1863", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBSR", nome:"SÃO JOSÉ DO RIO PRETO", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,8423", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBST", nome:"BASE AÉREA DE SANTOS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"7,9244", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBUL", nome:"UBERLÂNDIA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"5,1741", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBUR", nome:"UBERABA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"9,9557", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBVG", nome:"VARGINHA", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
+            {icao:"SBVT", nome:"VITÓRIA", uf:"ES", regiao:"SUDESTE", combustivel:"JET A", preco:"4,9722", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SBYS", nome:"AFA - PIRASSUNUNGA", uf:"SP", regiao:"SUDESTE", combustivel:"AVGAS", preco:"8,7684", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBYS", nome:"AFA - PIRASSUNUNGA", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"4,6544", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBYS", nome:"AFA - PIRASSUNUNGA", uf:"SP", regiao:"SUDESTE", combustivel:"JET PLUS", preco:"4,7744", empresa:"MJ ABASTECIMENTOS AERONAUTICOS LTDA", obs:""},
+            {icao:"SBZM", nome:"GOIANÁ", uf:"MG", regiao:"SUDESTE", combustivel:"JET A", preco:"10,0057", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SDBK", nome:"BOTUCATU", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SDIO", nome:"ITÁPOLIS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SDPW", nome:"PIRACICABA", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"},
+            {icao:"SDSC", nome:"SÃO CARLOS", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"9,6957", empresa:"VIBRA ENERGIA S.A", obs:""},
+            {icao:"SIMK", nome:"FRANCA", uf:"SP", regiao:"SUDESTE", combustivel:"JET A", preco:"10,2057", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário realizar agendamento prévio de 24 horas, através dos contatos: Marcos Miorin (16) 98194-0166 ou Thiago (16) 99992-2224"}
+        ];
+
+        function filtrarDados() {
+            var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            var regionFilter = document.getElementById('regionFilter').value;
+            var fuelFilter = document.getElementById('fuelFilter').value;
+            
+            var resultados = localidadesData.filter(function(item) {
+                var matchSearch = searchTerm === '' || 
+                    item.icao.toLowerCase().indexOf(searchTerm) !== -1 ||
+                    item.nome.toLowerCase().indexOf(searchTerm) !== -1 ||
+                    item.uf.toLowerCase().indexOf(searchTerm) !== -1;
+                
+                var matchRegion = regionFilter === '' || item.regiao === regionFilter;
+                var matchFuel = fuelFilter === '' || item.combustivel === fuelFilter;
+                
+                return matchSearch && matchRegion && matchFuel;
+            });
+            
+            exibirResultados(resultados);
+        }
+
+        function exibirResultados(dados) {
+            var container = document.getElementById('resultsContainer');
+            
+            if (dados.length === 0) {
+                container.innerHTML = '<div class="no-results"><div class="no-results-icon">🔍</div><p>Nenhuma localidade encontrada</p></div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < dados.length; i++) {
+                var item = dados[i];
+                html += '<div class="result-item">';
+                html += '<div class="icao-code">' + item.icao + '</div>';
+                html += '<div class="locality-name">' + item.nome + '</div>';
+                
+                html += '<div class="info-grid">';
+                html += '<div class="info-item"><div class="info-label">Região</div><div class="info-value">' + item.regiao + '</div></div>';
+                html += '<div class="info-item"><div class="info-label">Estado</div><div class="info-value"><span class="uf-badge">' + item.uf + '</span></div></div>';
+                html += '<div class="info-item"><div class="info-label">Combustível</div><div class="info-value">' + item.combustivel + '</div></div>';
+                html += '<div class="info-item"><div class="info-label">Preço</div><div class="info-value price">R$ ' + item.preco.replace('.', ',') + '</div></div>';
+                html += '</div>';
+                
+                html += '<div class="info-item"><div class="info-label">Empresa</div><div class="info-value">' + item.empresa + '</div></div>';
+                html += '<div class="info-item"><div class="info-label">Vigência até</div><div class="info-value">' + item.vigencia + '</div></div>';
+                
+                if (item.obs && item.obs.trim() !== '') {
+                    html += '<div class="observacoes"><strong>Observações:</strong> ' + item.obs + '</div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            html += '<div class="stats">' + dados.length + ' resultado' + (dados.length !== 1 ? 's' : '') + ' encontrado' + (dados.length !== 1 ? 's' : '') + '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        // Inicializar a aplicação
+        window.onload = function() {
+            // Mostrar data da última atualização
+            if (CONFIG_PLANILHA.ultimaAtualizacao !== 'Nunca atualizado') {
+                mostrarStatus('Última atualização: ' + CONFIG_PLANILHA.ultimaAtualizacao, 'success');
+            }
+            
+            filtrarDados();
+        };
+    </script>
+</body>
+</html>
