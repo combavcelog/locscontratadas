@@ -269,6 +269,71 @@
                 padding: 12px;
             }
         }
+    
+        /* --- POP-UP (modal) --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none; /* será exibido via JS */
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+        }
+        .modal-box {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 14px 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-content {
+            padding: 18px;
+            color: #1f2937;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .modal-content ul {
+            margin-left: 18px;
+            margin-top: 8px;
+            list-style: disc;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 18px 18px 18px;
+        }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #059669, #10b981);
+            color: #fff;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+        @media (max-width: 480px) {
+            .modal-content { font-size: 14px; }
+        }
+
     </style>
 </head>
 <body onload="atualizarPrecos()">
@@ -319,6 +384,29 @@
     </div>
 
     <script>
+
+        // --- POP-UP ---
+        function abrirAviso() {
+            try {
+                var ate = localStorage.getItem('popupOcultoAte');
+                if (ate && Date.now() < parseInt(ate, 10)) {
+                    return; // não mostrar até expirar
+                }
+            } catch(e) {}
+            var el = document.getElementById('popupAviso');
+            if (el) el.style.display = 'flex';
+        }
+        function fecharAviso() {
+            var el = document.getElementById('popupAviso');
+            if (el) el.style.display = 'none';
+        }
+        function naoMostrarHoje() {
+            var amanha = Date.now() + 24*60*60*1000;
+            try { localStorage.setItem('popupOcultoAte', String(amanha)); } catch(e) {}
+            fecharAviso();
+        }
+
+
         // Configuração da planilha Google Sheets
         var CONFIG_PLANILHA = {
             // Planilha oficial da FAB atualizada mensalmente
@@ -689,6 +777,30 @@
             
             filtrarDados();
         };
+    
+        document.addEventListener('DOMContentLoaded', abrirAviso);
     </script>
+
+    <!-- POP-UP de aviso inicial -->
+    <div id="popupAviso" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="popupTitulo">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>⚠️ Aviso Importante</span>
+            </div>
+            <div class="modal-content">
+                <p><strong>Versão mobile em testes.</strong></p>
+                <ul>
+                    <li><strong>Obrigatório</strong> atualizar os preços (no botão “<em>Clique para Atualizar Preços</em>”).</li>
+                    <li>Sempre verifique a <strong>VIGÊNCIA</strong> do contrato.</li>
+                    <li>Consulte a planilha com as localidades contratadas em um <strong>computador</strong> sempre que possível.</li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="naoMostrarHoje()">Não mostrar hoje</button>
+                <button class="btn btn-primary" onclick="fecharAviso()">Entendi</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
