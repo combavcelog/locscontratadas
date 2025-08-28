@@ -396,10 +396,18 @@
             var el = document.getElementById('popupAviso');
             if (el) el.style.display = 'flex';
         }
+        
         function fecharAviso() {
             var el = document.getElementById('popupAviso');
             if (el) el.style.display = 'none';
+
+            // Tenta acionar automaticamente o botão "Clique para Atualizar Preços"
+            var btn = document.querySelector('button#atualizarPrecos, button[data-id="atualizarPrecos"], button');
+            if (btn && btn.innerText.includes("Clique para Atualizar Preços")) {
+                btn.click();
+            }
         }
+
         function naoMostrarHoje() {
             var amanha = Date.now() + 24*60*60*1000;
             try { localStorage.setItem('popupOcultoAte', String(amanha)); } catch(e) {}
@@ -574,7 +582,6 @@
             {icao:"SBBW", nome:"BARRA DO GARÇAS", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,1634", empresa:"REDE SOL FUEL DISTRIBUIDORA S/A", obs:"Necessário entrar em contato com o funcional do COMBLUB - (11) 95045-6343"},
             {icao:"SBCG", nome:"BASE AÉREA DE CAMPO GRANDE", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"AVGAS", preco:"9,3084", empresa:"VIBRA ENERGIA S.A", obs:""},
             {icao:"SBCG", nome:"BASE AÉREA DE CAMPO GRANDE", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A1", preco:"5,0573", empresa:"VIBRA ENERGIA S.A", obs:"CONSULTAR COM O AGENTE DE COMBUSTÍVEL A DISPONIBILIDADE DO PRIST"},
-            {icao:"SBCN", nome:"CALDAS NOVAS", uf:"GO", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"9,1539", empresa:"VIBRA ENERGIA S.A", obs:""},
             {icao:"SBCR", nome:"CORUMBÁ", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,1790", empresa:"VIBRA ENERGIA S.A", obs:""},
             {icao:"SBCY", nome:"VÁRZEA GRANDE", uf:"MT", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"5,3940", empresa:"RAIZEN S.A.", obs:""},
             {icao:"SBDB", nome:"BONITO", uf:"MS", regiao:"CENTRO-OESTE", combustivel:"JET A", preco:"10,9834", empresa:"VIBRA ENERGIA S.A", obs:""},
