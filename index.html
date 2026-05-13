@@ -528,6 +528,8 @@
                         icao: colunas[1],
                         combustivel: colunas[5],
                         preco: precoBruto,
+                        obs: colunas[6] || '',
+                        empresa: colunas[9] || '',
                         vigencia: colunas[8] || '',
                         chave: colunas[1] + '_' + colunas[5] // Para identificação única
                     });
@@ -546,6 +548,8 @@
                 // Usar o preço exatamente como veio da planilha (já com vírgula)
                 mapDados[chave] = {
                     preco: item.preco,
+                    obs: item.obs,
+                    empresa: item.empresa,
                     vigencia: item.vigencia
                 };
             });
@@ -557,6 +561,15 @@
                 if (mapDados[chave]) {
                     var dadosAntigos = localidade.preco + '|' + localidade.vigencia;
                     localidade.preco = mapDados[chave].preco;
+
+                    if (mapDados[chave].obs !== undefined) {
+                        localidade.obs = mapDados[chave].obs;
+                    }
+
+                    if (mapDados[chave].empresa) {
+                        localidade.empresa = mapDados[chave].empresa;
+                    }
+
                     if (mapDados[chave].vigencia) {
                         localidade.vigencia = mapDados[chave].vigencia;
                     }
